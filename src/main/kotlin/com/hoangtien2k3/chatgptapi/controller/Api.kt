@@ -11,8 +11,7 @@ import reactor.core.publisher.Mono
 
 @Controller
 @RequestMapping("/bot")
-class Api (
-    @Autowired
+class Api @Autowired constructor(
     private val webClientBuilder: WebClient.Builder,
     @Value("\${openai.model}")
     private val model: String,
@@ -22,16 +21,12 @@ class Api (
     @GetMapping("/chat")
     @ResponseBody
     fun chat(@RequestParam("message") message: String): Mono<String> {
-        val request = ChatGPTRequest(model, message)
-
         return webClientBuilder.build()
             .post()
             .uri(apiURL)
-            .bodyValue(request)
+            .bodyValue(ChatGPTRequest(model, message))
             .retrieve()
             .bodyToMono(ChatGptResponse::class.java)
-            .map {
-                it.choices[0].message.content
-            }
+            .map { it.choices[0].message.content }
     }
 }

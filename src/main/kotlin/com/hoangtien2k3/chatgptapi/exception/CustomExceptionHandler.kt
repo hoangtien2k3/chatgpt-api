@@ -1,5 +1,6 @@
 package com.hoangtien2k3.chatgptapi.exception
 
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -15,21 +16,22 @@ import org.springframework.web.context.request.WebRequest
 
 @ControllerAdvice
 @RestController
-class CustomExceptionHandler(private val webClientBuilder: WebClient.Builder) : ResponseEntityExceptionHandler() {
+class CustomExceptionHandler @Autowired constructor(
+    private val webClientBuilder: WebClient.Builder
+) : ResponseEntityExceptionHandler() {
 
-    @ExceptionHandler(HttpClientErrorException::class, HttpServerErrorException::class)
-    fun handleOpenAIException(ex: Exception, request: WebRequest): ResponseEntity<Any> {
-        if (ex is HttpClientErrorException) {
-            if (ex.statusCode == HttpStatus.UNAUTHORIZED) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You didn't provide an API key. Provide your API key.")
-            }
-        }
+    @ExceptionHandler(HttpClientErrorException.Unauthorized::class)
+    fun handleUnauthorizedException(ex: HttpClientErrorException.Unauthorized): ResponseEntity<String> {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You didn't provide an API key. Provide your API key.")
+    }
 
+    @ExceptionHandler(value = [HttpClientErrorException::class, HttpServerErrorException::class])
+    fun handleOpenAIException(ex: HttpClientErrorException, request: WebRequest): ResponseEntity<String> {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while processing the request.")
     }
 
     @ExceptionHandler(ResponseStatusException::class)
-    fun handleResponseStatusException(ex: ResponseStatusException, request: WebRequest): ResponseEntity<Any> {
+    fun handleResponseStatusException(ex: ResponseStatusException): ResponseEntity<String> {
         return ResponseEntity.status(ex.statusCode).body(ex.reason)
     }
 
@@ -38,5 +40,4 @@ class CustomExceptionHandler(private val webClientBuilder: WebClient.Builder) : 
     fun handleGenericException(ex: Exception): String {
         return "An unexpected error occurred: ${ex.message}"
     }
-
 }

@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor
 @AllArgsConstructor
 @NoArgsConstructor
 data class ChatGptResponse(val choices: List<Choice>) {
-
     @NoArgsConstructor
     data class Choice(val index: Int, val message: Message)
-
 }
